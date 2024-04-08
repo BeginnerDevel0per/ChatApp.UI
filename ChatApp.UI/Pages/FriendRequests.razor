@@ -1,0 +1,95 @@
+﻿@using ChatApp.UI.Shared.DTOs.UserDTOs
+<div class="row me-3 mt-2 ms-3">
+    <h6 class="Nav-Title text-center text-white">Sana Gönderilen Arkadaşlık İstekleri</h6>
+    <hr />
+</div>
+@if (Loading)
+{
+    <div class="vh-100 d-flex justify-content-center align-items-center">
+        <div class="row mb-5 pb-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+}
+@if (UserRequestList != null && UserRequestList.Count > 0)
+{
+    @foreach (var item in UserRequestList)
+    {
+
+        <div class=" card border-0  " style="background-color:#1c1d1f;">
+            <div class="row  align-items-center g-0">
+                <div class="col-3 d-flex justify-content-end">
+                    @if (item.ProfileImage != null)
+                    {
+                        string ProfileImage = $"https://localhost:7255/UserProfileImage/{item.ProfileImage}";
+
+                        <img alt="Icon" width="70" height="70" class="rounded-circle" src="@ProfileImage" style="object-fit:cover;">
+                    }
+                    else
+                    {
+                        <img alt="Icon" width="70" height="70" class="rounded-circle" src="/UserIcon.png" style="object-fit:cover;">
+                    }
+                </div>
+                <div class="col-9">
+                    <div class="card-body text-start text-truncate">
+                        <h6 class="card-title">@item.UserName</h6>
+                        <div class="col text-end">
+                            <button @onclick="()=> AcceptFriendRequest(item.Id)" class="btn btn-success btn-sm">Onayla</button>
+                            <button @onclick="()=> RemoveFriendRequest(item.Id)" class="btn btn-danger btn-sm">Sil</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    }
+}
+else
+{
+
+    <div class="row m-3 mt-3">
+        <span style="color:gray;">Şu anda arkadaşlık isteğin yok.</span>
+    </div>
+}
+
+
+@code {
+    public bool Loading { get; set; } = true;
+    public List<UserDto?>? UserRequestList { get; set; } = new();
+    protected override async Task OnInitializedAsync()
+    {
+        await RequestList();
+        Loading = false;
+    }
+
+
+    private async void AcceptFriendRequest(Guid AcceptId)
+    {
+        var request = await Http.GetAsync($"/AcceptFriendRequest/{AcceptId}");
+        if (request.IsSuccessStatusCode)
+            await RequestList();
+
+    }
+
+    private async void RemoveFriendRequest(Guid RemoveId)
+    {
+        var request = await Http.DeleteAsync($"/RemoveFriendRequestOrFriend/{RemoveId}");
+        if (request.IsSuccessStatusCode)
+        {
+            await RequestList();
+        }
+    }
+    private async Task RequestList()
+    {
+
+        var request = await Http.GetAsync($"/GetFriendRequests");
+        if (request.IsSuccessStatusCode)
+        {
+            UserRequestList = await request.Content.ReadFromJsonAsync<List<UserDto?>>();
+            StateHasChanged();
+        }
+    }
+}

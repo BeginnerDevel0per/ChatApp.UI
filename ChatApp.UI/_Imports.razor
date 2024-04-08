@@ -1,0 +1,19 @@
+﻿@using System.Net.Http
+@using System.Net.Http.Json
+@using ChatApp.UI.Services.Interfaces
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+@using Microsoft.JSInterop
+@using ChatApp.UI
+@using ChatApp.UI.Shared
+@using ChatApp.UI.Shared.DTOs
+@using Blazored.LocalStorage
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IChatService ChatService
+@inject ILastMessagesService LastMessagesService
+@inject IJSRuntime JSruntime

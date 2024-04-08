@@ -1,0 +1,283 @@
+﻿@layout MainLayout
+@page "/Message/{ReceiverId}"
+@using ChatApp.UI.Shared.DTOs.UserDTOs
+@using ChatApp.UI.Pages;
+@using Microsoft.AspNetCore.SignalR.Client
+
+<div class="row vh-100 ">
+    <div class="RenderBody-1 d-none d-lg-block col-lg-3 p-0">
+        <LeftOfPage></LeftOfPage>
+    </div>
+    <div class="RenderBody-2 col-lg-9 p-0 ">
+
+        <div class="container position-sticky" style="background-color:#1c1d1f;">
+            <div class="row  mt-2 align-items-center ">
+                <div class="col-auto  p-1 d-lg-none d-flex ">
+                    <a href="/home">
+                        <i style="font-size:25px;" class="bi bi-chevron-left"></i>
+                    </a>
+                </div>
+                <div class="col-auto  p-1 d-flex justify-content-start   ">
+                    @if (ReceiverUserDto.ProfileImage != null)
+                    {
+                        string ProfileImage = $"https://localhost:7255/UserProfileImage/{ReceiverUserDto.ProfileImage}";
+
+                        <img alt="Icon" width="70" height="70" class="rounded-circle" src="@ProfileImage" style="object-fit:cover;">
+                    }
+                    else
+                    {
+                        <img alt="Icon" width="70" height="70" class="rounded-circle" src="/UserIcon.png" style="object-fit:cover;">
+                    }
+                </div>
+                <div class="col-auto p-1  text-start">
+
+                    <h6 class=" fw-bolder text-white">@ReceiverUserDto.UserName</h6>
+                    <h6 class="text-white  "> @(IsOnline ? "Çevrimiçi" : "Çevrimdışı") </h6>
+                </div>
+            </div>
+        </div>
+
+
+
+
+        <div class="Message-view-container m-0 p-0" id="chatContainer">
+            <div class="row text-center d-flex justify-content-center">
+                @if (connectionError)
+                {
+                    <h5>bağlantı hatası...</h5>
+                }
+            </div>
+
+            @if (_Messages != null)
+            {
+                @foreach (var item in _Messages)
+                {
+                    if (item.ReceiverId != Guid.Parse(ReceiverId))
+                    {
+                        <div class=" row p-1  d-flex justify-content-start">
+                            <div class="col-auto MessageBox">
+                                <div class="card p-0 pe-2 ps-2 m-0" style="background-color:dimgray;">
+
+                                    <div class="row align-items-center">
+                                        <p class="card-text m-2 text-white"><span>@item.Content</span> <span class="mt-3" style="font-size:xx-small;">@item.CreatedDate.ToShortTimeString()</span></p>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                    }
+                    else
+                    {
+                        <div class=" row p-1  d-flex justify-content-end">
+                            <div class="col-auto MessageBox ">
+                                <div class="card p-0 pe-2 ps-2 m-0" style="background-color:#ff8c00;">
+
+                                    <div class="row align-items-center">
+                                        <p class="card-text m-2 text-white"><span>@item.Content</span> <span class="mt-3" style="font-size:xx-small;">@item.CreatedDate.ToShortTimeString()</span></p>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                }
+            }
+
+        </div>
+        <div class="container send-message-container d-flex justify-content-center align-items-center mt-3 ">
+            @if (Friend == true)
+            {
+
+
+                <div class="row w-100 d-flex   justify-content-center ">
+                    <div class="col-10 col-lg-9  d-flex justify-content-end ">
+                        <input @ref="inputElement" @bind="message" @bind:event="oninput" @onkeypress="enter" autocomplete="off" type="text" class="form-control bg-dark text-white border-0 " id="txtMessage" placeholder="Bir Mesaj Gönder.">
+                    </div>
+                    <div class="col-2 col-lg-auto  d-flex justify-content-start ">
+                        <button @onclick="SendMessage" id="blockButton" class="btn btn-success border-0 rounded-circle message-send-button" style="background-color:#ff8c00;"><i class="bi bi-send-fill"></i></button>
+                    </div>
+                </div>
+
+            }
+            else if (Friend == false)
+            {
+
+
+                <div class="row w-100 d-flex  justify-content-center ">
+                    <div class="col-12  d-flex justify-content-center ">
+                        <span style="color:gray; font-size:small;">Bu kişiyle şu anda arkadaş değilsin.Mesaj gönderemezsin.</span>
+                    </div>
+
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string ReceiverId { get; set; }
+
+    public UserDto ReceiverUserDto { get; set; } = new();
+    public bool IsOnline { get; set; }
+    private List<MessageDto>? _Messages;
+    public string? message { get; set; }
+    public bool connectionError { get; set; } = false;
+    public bool? Friend { get; set; } = null;
+    private ElementReference inputElement;
+
+
+
+
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Sayfa yüklendiğinde scroll'u en alttan başlat
+            await JSruntime.InvokeVoidAsync("scrollToBottom");
+        }
+
+        await JSruntime.InvokeVoidAsync("scrollToBottom");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Friend = null;
+        _Messages?.Clear();
+        if (await ChatService.ConnectionState())
+        {
+            var request = await Http.GetAsync($"/GetMessagesBetweenToUsers/{ReceiverId}");
+            if (request.IsSuccessStatusCode)
+            {
+                _Messages = new();
+                _Messages = await request.Content.ReadFromJsonAsync<List<MessageDto>>();
+            }
+            var IsFriendRequest = await Http.GetAsync($"/GetUserProfile/{ReceiverId}");
+            if (IsFriendRequest.IsSuccessStatusCode)
+            {
+                var response = await IsFriendRequest.Content.ReadFromJsonAsync<GetUserProfileDto>();
+                ReceiverUserDto = response.UserDto;
+                if (response?.FriendOfUsersDto == null || response.FriendOfUsersDto.IsRequestAccepted == false)
+                {
+                    Friend = false;
+                }
+                else
+                {
+
+                    await ChatService.HubConnection.InvokeAsync("IsOnlineUsers");//bu sayfaya girildiği anda kullanıcının online olup olma durumunu kontrol ettiriyorum.
+                    Friend = true;
+                    await MessageOperations();
+                }
+
+            }
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task enter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrEmpty(message))
+        {
+
+            await SendMessage();
+        }
+    }
+    private async Task SendMessage()
+    {
+        await JSruntime.InvokeVoidAsync("focusElement", inputElement);
+        if (!string.IsNullOrEmpty(message))
+        {
+            if (ChatService.HubConnection is not null)
+            {
+                MessageDto messageDto = new MessageDto()
+                    {
+                        ReceiverId = Guid.Parse(ReceiverId),
+                        Content = message,
+                        CreatedDate = DateTime.Now,
+                        SenderId = Guid.Empty,
+                    };
+
+                try
+                {
+
+                    var response = await Http.GetAsync($"/Message/{ReceiverId}/{message}");
+                    _Messages?.Add(messageDto);
+                    message = string.Empty;
+
+
+                }
+                catch (Exception ex)
+                {
+                    ErrorMessage();
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+
+
+
+    private async Task MessageOperations()
+    {
+
+        try
+        {
+
+            ChatService.HubConnection.On<MessageDto>("ReceiveMessage", async (messageDto) =>
+                    {
+                        if (Guid.Parse(ReceiverId) == messageDto.SenderId)
+                        {
+                            _Messages?.Add(messageDto);
+                            await InvokeAsync(StateHasChanged);
+                        }
+
+                    });
+
+            //alt kısımdaki kod bloğum kullanıcının online durumunu sorgulayacak
+            ChatService.HubConnection.On<List<string>>("UserOnlineState", async Clients =>
+         {
+             IsOnline = false;
+             foreach (var item in Clients)
+             {
+                 if (item == ReceiverId)
+                 {
+                     IsOnline = true;
+                     break;
+                 }
+             }
+             await InvokeAsync(StateHasChanged);
+         });
+
+        }
+        catch (Exception ex)
+        {
+
+            ErrorMessage();
+            StateHasChanged();
+
+        }
+        ChatService.HubConnection.Closed += async (error) =>
+         {
+             ErrorMessage();
+             await InvokeAsync(StateHasChanged);
+         };
+    }
+
+    public void ErrorMessage()
+    {
+        MessageDto messageDto = new MessageDto();
+        messageDto.CreatedDate = DateTime.Now;
+        messageDto.SenderId = Guid.Empty;
+        messageDto.ReceiverId = Guid.Empty;
+        messageDto.Content = "Bir hata oluştu.Sunucuyla bağlantı kurulamıyor.";
+        messageDto.Id = Guid.Empty;
+        _Messages?.Add(messageDto);
+    }
+}

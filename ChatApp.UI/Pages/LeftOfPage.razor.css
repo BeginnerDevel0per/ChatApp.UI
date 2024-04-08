@@ -1,0 +1,37 @@
+﻿.page {
+    border-right: 2px solid white;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.nav-menu a {
+    max-width: 100%; /* Maksimum genişlik sınırı */
+    padding: 3px ; /* Linklerin içeriğe boşluk bırakması için */
+    margin-right: 10px; /* Linkler arasında sağ boşluk bırakmak için */
+    white-space: nowrap; /* Linklerin yan yana sıralanmasını sağlar */
+}
+
+.nav-menu {
+    justify-content: center;
+    align-items: center;
+}
+
+.Mobile-Nav{
+    bottom:0;
+    z-index:50;
+    position:fixed;
+}
+   
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: none;
+}
+
+    @media (max-width:768px) {
+        .page {
+        border-right: none;
+    }
+    .nav-menu {
+        justify-content: normal;
+        align-items: normal;
+    }
+}

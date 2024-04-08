@@ -1,0 +1,70 @@
+﻿
+<div class="page p-lg-2" style="height:100%;">
+
+    <div class="row  justify-content-center mt-1 overflow-auto d-none d-sm-flex">
+        <div class="col-auto  p-2"><a @onclick="()=>ChangePage(Page.PastMessages)" href="javascript:void(0);" class="text-white text-decoration-none small">Sohbetlerim</a> </div>
+        <div class="col-auto p-2"><a @onclick="()=>ChangePage(Page.SearchUser)" href="javascript:void(0);" class="text-white text-decoration-none small">Kullanıcı Ara</a> </div>
+        <div class="col-auto  p-2"><a @onclick="()=>ChangePage(Page.Profile)" href="javascript:void(0);" class="text-white text-decoration-none small">Profilim</a> </div>
+        <div class="col-auto p-2"><a @onclick="()=>ChangePage(Page.FriendRequest)" href="javascript:void(0);" class="text-white text-decoration-none small">Arkadaşlık İsteği</a> </div>
+        <hr class="bg-black" />
+    </div>
+
+
+    <div class="btn-group Mobile-Nav   d-sm-none" style="width:100%;">
+        <button @onclick="()=>ChangePage(Page.PastMessages)" class="btn btn-dark btn-sm w-25 text-truncate">
+            <i style="font-size:25px;" class="bi bi-chat-fill  p-0"></i>
+            <br />
+            <p style="font-size:x-small;" class="m-0 p-0">Mesajlar</p>
+        </button>
+        <button @onclick="()=>ChangePage(Page.SearchUser)" class="btn btn-dark btn-sm w-25 text-truncate">
+            <i style="font-size:25px;" class="bi bi-search m-0 p-0"></i>
+            <br />
+            <p style="font-size:x-small;" class="m-0 p-0">Ara</p>
+        </button>
+        <button @onclick="()=>ChangePage(Page.Profile)" class="btn btn-dark btn-sm w-25 text-truncate">
+            <i style="font-size:25px;" class="bi bi-person-fill p-0"></i>
+            <br />
+            <p style="font-size:x-small;" class="m-0">Profilim</p>
+        </button>
+        <button @onclick="()=>ChangePage(Page.FriendRequest)" class="btn btn-dark btn-sm w-25 text-truncate">
+            <i style="font-size:25px;" class="bi bi-people-fill p-0"></i>
+            <br />
+            <p style="font-size:x-small; " class="m-0 p-0 ">Arkadaşlık İsteği</p>
+        </button>
+    </div>
+
+
+    <div class="row d-flex justify-content-center mt-4  mt-sm-0">
+        @switch (currentPage)
+        {
+            case Page.PastMessages:
+                <PastMessages></PastMessages>
+                break;
+            case Page.SearchUser:
+                <SearchUser></SearchUser>
+                break;
+            case Page.Profile:
+                <Profile></Profile>
+                break;
+            case Page.FriendRequest:
+                <FriendRequests></FriendRequests>
+                break;
+        }
+    </div>
+</div>
+@code {
+
+    enum Page
+    {
+        PastMessages,
+        SearchUser,
+        Profile,
+        FriendRequest
+    }
+    private Page currentPage = Page.PastMessages;
+
+    private void ChangePage(Page page)
+    {
+        currentPage = page;
+    }
+}

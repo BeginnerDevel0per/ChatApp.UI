@@ -1,0 +1,41 @@
+﻿@using System.Net.Http.Headers
+@using Microsoft.AspNetCore.SignalR.Client
+
+
+@ChildContent
+
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        var token = await localStorage.GetItemAsync<string>("JWT");
+
+        if (!string.IsNullOrEmpty(token))
+        {
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var request = await Http.GetAsync("/api/IsValidToken");
+            if (request.IsSuccessStatusCode)
+            {
+
+                await ChatService.InitializeHubConnectionAsync(token);
+                if (ChatService.HubConnection.State == HubConnectionState.Disconnected)
+                {
+                    await ChatService.HubConnection.StartAsync();
+                }
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/Login");
+            }
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/Login");
+        }
+    }
+
+}

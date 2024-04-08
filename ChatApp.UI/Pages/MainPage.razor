@@ -1,0 +1,50 @@
+﻿@page "/"
+@using System.Net.Http.Headers
+
+
+<div class="row p-0 m-0  min-vh-100 d-flex justify-content-center align-items-center" style="background-color:#1c1d1f;">
+
+    <div class="row pb-5 mb-5 text-center d-flex justify-content-center">
+        <div class="d-flex justify-content-center ">
+            <img class="d-flex " src="../icons8-chat-100.png" />
+        </div>
+        <h1 class="text-white mb-5">ChatApp</h1>
+        <h6 style="color:lightgray;">Kullanıcı adı ve şifren ile</h6>
+        <div class="row d-flex justify-content-center">
+            <div class="col-12 col-md-3 ">
+                <div class="row">
+                    <a type="button" href="/Login" class="btn btn-primary btn-lg border-0" style="background-color:#ff8c00;">Giriş Yap</a>
+                </div>
+            </div>
+        </div>
+        <h3 class="text-center  pt-2" style="color:lightgray;">Veya</h3>
+        <div class="row d-flex justify-content-center mb-2">
+            <div class="col-12  col-md-3">
+                <div class="row">
+                    <a href="/Register" type="button" class="btn btn-secondary btn-lg border-0">Kayıt Ol</a>
+                </div>
+            </div>
+        </div>
+        <h6 style="color:gray;">Uygulamanın kaynak kodlarına <a style="color:#ff8c00;" href="">buradan</a> erişebilirsin.</h6>
+        <h6 class="text-danger">Bu uygulama sürekli kullanıma uygun değildir.</h6>
+       
+    </div>
+</div>
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        var token = await localStorage.GetItemAsync<string>("JWT");
+        @if (!string.IsNullOrEmpty(token))
+        {
+            var Request = await Http.GetAsync("/api/IsValidToken");
+            if (Request.IsSuccessStatusCode)
+            {
+                NavigationManager.NavigateTo("/Home");
+            }
+        }
+
+    }
+}
+
+

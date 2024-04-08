@@ -1,0 +1,63 @@
+﻿
+
+.Message-view-container {
+
+    background-image: url(../background_wallpaper.jpg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-left: 5px;
+    padding-right: 5px;
+    width: 100%;
+    height: calc( 100% - 100px);
+}
+
+#blockButton{
+    pointer-events:stroke;
+}
+.send-message-container {
+    bottom: 10px;
+}
+
+.MessageBox {
+    max-width: 450px;
+}
+
+@media (max-width:768px) {
+    .MessageBox {
+        max-width: 350px;
+    }
+
+    #txtMessage {
+        border-radius: 50px;
+    }
+}
+
+@media (max-width:300px) {
+    .MessageBox {
+        max-width: 250px;
+    }
+}
+/* Genel kaydırma çubuğu stilleri */
+.Message-view-container::-webkit-scrollbar {
+    width: 3px; /* Kaydırma çubuğu genişliği */
+    height: 100%;
+}
+
+/* Kaydırma çubuğu track */
+.Message-view-container::-webkit-scrollbar-track {
+    background-color: #f1f1f1; /* Track arkaplan rengi */
+}
+
+/* Kaydırma çubuğu handle */
+.Message-view-container::-webkit-scrollbar-thumb {
+    background-color: darkgoldenrod; /* Handle arkaplan rengi */
+    border-radius: 6px; /* Handle kenar yarıçapı */
+}
+
+    /* Kaydırma çubuğu handle üzerine gelindiğinde */
+    .Message-view-container::-webkit-scrollbar-thumb:hover {
+        background-color: #555; /* Handle üzerine gelindiğindeki arkaplan rengi */
+    }

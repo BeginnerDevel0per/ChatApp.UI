@@ -1,0 +1,489 @@
+﻿@using ChatApp.UI.Shared.DTOs.UserDTOs
+@using ChatApp.UI.Components
+@using System.Net.Http.Headers
+<div class="row d-flex justify-content-center  pt-5">
+    <div class="col-auto ">
+        @if (MyProfile.ProfileImage != null)
+        {
+            string ProfileImage = $"https://localhost:7255/UserProfileImage/{MyProfile.ProfileImage}";
+
+            <img alt="Icon" width="100" height="100" class="rounded-circle" src="@ProfileImage" style="object-fit:cover;">
+        }
+        else
+        {
+            <img alt="Icon" width="100" height="100" class="rounded-circle" src="/UserIcon.png" style="object-fit:cover;">
+        }
+    </div>
+
+
+</div>
+<div class="row d-flex text-center justify-content-center">
+    <h4 class="text-white">@MyProfile.UserName</h4>
+    <h3 class="text-white">@MyProfile.Email</h3>
+</div>
+
+
+@if (CurrentComponents == Components.NavMenu)
+{
+
+    <div class="container mt-3">
+        <a href="javascript:void(0);" @onclick="()=>FriendList(Components.FriendList)" class="text-decoration-none" style="color:white;">
+            <div class="row p-3 d-flex bg-dark  justify-content-center">
+                <div class="col-10 ">
+                    <span> Arkadaşlarım</span>
+                </div>
+                <div class="col-2 ">
+                    <i class="bi bi-chevron-right"></i>
+                </div>
+            </div>
+        </a>
+        <a href="javascript:void(0);" @onclick="()=>ChangeComponents(Components.ChangeProfile)" class="text-decoration-none" style="color:white;">
+            <div class="row p-3 d-flex bg-dark  justify-content-center">
+                <div class="col-10 ">
+                    <span> Profili Düzenle</span>
+                </div>
+                <div class="col-2 ">
+                    <i class="bi bi-chevron-right"></i>
+                </div>
+            </div>
+        </a>
+
+        <a href="javascript:void(0);" class="text-decoration-none" style="color:white;">
+
+
+            <div class="row p-3 d-flex justify-content-center align-items-center bg-dark">
+                <div class="col-10 ">
+                    <InputFile id="ProfileImageFile" class="d-none" OnChange="PreviewProfileImage"></InputFile>
+                    <label style="cursor:pointer;" for="ProfileImageFile">
+                        Profil Resmini Değiştir
+                    </label>
+                </div>
+                <div class="col-2 ">
+                    <label style="cursor:pointer;" for="ProfileImageFile" class="bi bi-chevron-right"></label>
+                </div>
+            </div>
+        </a>
+        <Modal @ref="modal">
+            <div class="d-flex  justify-content-center">
+                <div class="Profile-Image-Preview" style="background-image:url(@imageUrl);">
+
+                    @if (ImageLoading)
+                    {
+                        <div class="d-flex  justify-content-center" style="padding-top:110px;">
+                            <div class="spinner-border " style="color:#ff8c00;" role="status">
+                                <span class="visually-hidden">Profil Resmi Değiştiriliyor...</span>
+                            </div>
+                        </div>
+                    }
+
+
+                </div>
+            </div>
+            <div class=" mt-1 d-flex text-center justify-content-center ">
+                <span style="font-size:small; color:lightgray;">Profil resminizi diğer kullanıcılar bu şekilde görüntüleyecek.</span>
+            </div>
+
+            <div class="mb-3 mt-3 d-flex justify-content-end">
+                <button @onclick="()=>ModalShow(false)" class="btn btn-dark border-0 me-1">İptal</button>
+                <button @onclick="UploadImage" class="btn btn-primary border-0 ms-1" style="background-color:#ff8c00;">Değiştir</button>
+            </div>
+
+            @if (IsSuccess)
+            {
+                <div class="mb-3 d-flex ">
+                    <span class="text-success">@SuccessContent</span>
+                </div>
+            }
+            else
+            {
+                @for (int i = 0; i < ErrorContent.Count; i++)
+                {
+                    <div class="mb-3 d-flex ">
+                        <span class="text-danger">@ErrorContent[i]</span>
+                    </div>
+                }
+            }
+
+        </Modal>
+
+        <a href="javascript:void(0);" @onclick="()=>ChangeComponents(Components.ChangePassword)" class="text-decoration-none" style="color:white;">
+            <div class="row p-3 d-flex justify-content-center align-items-center bg-dark">
+                <div class="col-10 ">
+                    <span>Şifre Değiştir</span>
+                </div>
+                <div class="col-2 ">
+                    <i class="bi bi-chevron-right"></i>
+                </div>
+            </div>
+        </a>
+        <a href="javascript:void(0);" @onclick="()=>LogOut()" class="text-decoration-none">
+            <div class="row p-3 d-flex justify-content-center align-items-center bg-dark">
+
+                <div class="col-10 d-flex  align-items-center">
+
+                    <span class="text-danger">Çıkış Yap</span>
+                </div>
+                <div class="col-2 ">
+                    <i class="bi bi-caret-left-fill text-danger"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+}
+
+@if (CurrentComponents == Components.FriendList)
+{
+    <div class="mt-3 p-0  row d-flex align-items-center justify-content-center" style="margin-bottom:100px;">
+        <div class="col-12 pt-2 rounded-3 bg-dark text-white">
+            <div class="row mb-3">
+                <div class="col-auto">
+                    <button @onclick="()=>ChangeComponents(Components.NavMenu)" class="bg-dark border-0"> <i class="bi bi-arrow-left text-white"></i></button>
+                </div>
+                <div class="col-auto">
+                    <span style=" color:gray; font-size:small;">Arkadaş Listen</span>
+                </div>
+            </div>
+            <div class="row">
+                @if (friendList.Count > 0)
+                {
+                    @foreach (var item in friendList)
+                    {
+
+                        <div class=" card border-0  bg-dark" style="background-color:#1c1d1f;">
+                            <div class="row  align-items-center g-0">
+                                <div class="col-3 d-flex justify-content-end">
+                                    @if (item.ProfileImage != null)
+                                    {
+                                        string ProfileImage = $"https://localhost:7255/UserProfileImage/{item.ProfileImage}";
+
+                                        <img alt="Icon" width="70" height="70" class="rounded-circle" src="@ProfileImage" style="object-fit:cover;">
+                                    }
+                                    else
+                                    {
+                                        <img alt="Icon" width="70" height="70" class="rounded-circle" src="/UserIcon.png" style="object-fit:cover;">
+                                    }
+                                </div>
+                                <div class="col-9">
+                                    <div class="card-body text-start text-truncate">
+                                        <h6 class="card-title">@item.UserName</h6>
+                                        <div class="col text-end">
+                                            <button class="btn btn-success btn-sm border-0" @onclick="()=>SendMessage(item.Id)" style="background-color:#ff8c00;">Mesaj Gönder</button>
+                                            <button class="btn btn-secondary btn-sm" @onclick="()=>RemoveFriendList(item.Id)">Çıkar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="row m-3 mt-3">
+                        <span style="color:gray;">Şu anda arkadaşın yok.</span>
+                    </div>
+                }
+
+
+            </div>
+        </div>
+    </div>
+}
+
+@if (CurrentComponents == Components.ChangeProfile)
+{
+    <div class=" mt-3 row d-flex align-items-center justify-content-center">
+        <div class="col-11 pt-2 pe-3 ps-3  rounded-3 bg-dark text-white">
+            <div class="row mb-3">
+                <div class="col-auto">
+                    <button @onclick="()=>ChangeComponents(Components.NavMenu)" class="bg-dark border-0"> <i class="bi bi-arrow-left text-white"></i></button>
+                </div>
+                <div class="col-auto">
+                    <span style=" color:gray; font-size:small;">Profil Bilgilerini Değiştir</span>
+                </div>
+            </div>
+
+            <EditForm Model="@updateProfile" OnValidSubmit="@UpdateProfile">
+                <DataAnnotationsValidator></DataAnnotationsValidator>
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class=" col-form-label-sm">E-Posta Adresi</label>
+                    <InputText type="email" @onclick="StateClear" @bind-Value="updateProfile.Email" class="form-control  text-white border-0" style="background-color:#1c1d1f;" id="exampleFormControlInput1" placeholder="E-Posta Adresi"></InputText>
+                </div>
+
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class=" col-form-label-sm">Kullanıcı Adı</label>
+                    <InputText type="text" @onclick="StateClear" @bind-Value="updateProfile.UserName" class="form-control text-white border-0" id="exampleFormControlInput1" style="background-color:#1c1d1f;" placeholder="Kullanıcı Adı"></InputText>
+                </div>
+
+                <div class="mb-3 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary border-0" style="background-color:#ff8c00;">Kaydet</button>
+                </div>
+                @if (IsSuccess)
+                {
+                    <div class="mb-3 d-flex ">
+                        <span class="text-success">@SuccessContent</span>
+                    </div>
+                }
+                else
+                {
+                    @for (int i = 0; i < ErrorContent.Count; i++)
+                    {
+                        <div class="mb-3 d-flex ">
+                            <span class="text-danger">@ErrorContent[i]</span>
+                        </div>
+                    }
+                }
+            </EditForm>
+        </div>
+    </div>
+}
+
+@if (CurrentComponents == Components.ChangePassword)
+{
+    <div class=" mt-3 row d-flex align-items-center justify-content-center">
+        <div class="col-11 p-3  rounded-3 bg-dark text-white">
+            <div class="row mb-3">
+                <div class="col-auto">
+                    <button @onclick="()=>ChangeComponents(Components.NavMenu)" class="bg-dark border-0"> <i class="bi bi-arrow-left text-white"></i></button>
+                </div>
+                <div class="col-auto">
+                    <span style=" color:gray; font-size:small;">Şifreni Değiştir</span>
+                </div>
+            </div>
+            <EditForm Model="updatePasswordDto" OnValidSubmit="UpdatePassword">
+                <DataAnnotationsValidator></DataAnnotationsValidator>
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="col-form-label-sm">Eski Şifre</label>
+                    <InputText type="password" @onclick="StateClear" @bind-Value="updatePasswordDto.CurrentPassword" class="form-control  text-white  border-0" style="background-color:#1c1d1f;" id="exampleFormControlInput1" placeholder="Şimdiki Şifren"></InputText>
+                </div>
+
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="col-form-label-sm ">Yeni Şifre</label>
+                    <InputText type="password" @onclick="StateClear" @bind-Value="updatePasswordDto.Password" class="form-control text-white   border-0" id="exampleFormControlInput1" style="background-color:#1c1d1f;" placeholder="Yeni Şifre"></InputText>
+                </div>
+                <div class="mb-3">
+                    <label for="exampleFormControlInput1" class="col-form-label-sm">Yeni Şifre Tekrar</label>
+                    <InputText type="password" @onclick="StateClear" @bind-Value="updatePasswordDto.PasswordAgain" class="form-control text-white   border-0" id="exampleFormControlInput1" style="background-color:#1c1d1f;" placeholder="Yeni Şifre Tekrar"></InputText>
+                </div>
+                <div class="mb-3 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary border-0" style="background-color:#ff8c00;">Kaydet</button>
+                </div>
+                @if (IsSuccess)
+                {
+                    <div class="mb-3 d-flex ">
+                        <span class="text-success">@SuccessContent</span>
+                    </div>
+                }
+                else
+                {
+                    @for (int i = 0; i < ErrorContent.Count; i++)
+                    {
+                        <div class="mb-3 d-flex ">
+                            <span class="text-danger">@ErrorContent[i]</span>
+                        </div>
+                    }
+
+                }
+            </EditForm>
+        </div>
+    </div>
+}
+
+
+
+@code {
+    public Modal modal { get; set; }
+    public bool IsSuccess { get; set; }
+    public string? SuccessContent { get; set; }
+    public List<string?> ErrorContent { get; set; } = new();
+    UserDto MyProfile = new();
+    ProfileDto updateProfile = new();
+    UpdatePasswordDto updatePasswordDto = new();
+    List<UserDto> friendList = new();
+    enum Components
+    {
+        ChangeProfile,
+        ChangePassword,
+        FriendList,
+        NavMenu
+
+    }
+    private Components CurrentComponents = Components.NavMenu;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetProfile();
+        StateHasChanged();
+    }
+
+    private async Task GetProfile()
+    {
+        var request = await Http.GetAsync("/GetProfile");
+        if (request.IsSuccessStatusCode)
+        {
+            MyProfile = await request.Content.ReadFromJsonAsync<UserDto?>();
+            updateProfile.UserName = MyProfile.UserName;
+            updateProfile.Email = MyProfile.Email;
+        }
+    }
+
+    private void ChangeComponents(Components components)
+    {
+        CurrentComponents = components;
+    }
+    private void StateClear()
+    {
+        IsSuccess = false;
+        SuccessContent = string.Empty;
+        ErrorContent.Clear();
+        StateHasChanged();
+    }
+
+
+    private async Task UpdateProfile()
+    {
+
+        var request = await Http.PutAsJsonAsync<ProfileDto>("/UpdateProfile", updateProfile);
+        if (request.IsSuccessStatusCode)
+        {
+            MyProfile.UserName = updateProfile.UserName;
+            MyProfile.Email = updateProfile.Email;
+            SuccessContent = "Kullanıcı Bilgileri Güncellendi";
+            IsSuccess = true;
+        }
+        else
+        {
+            var Error = await request.Content.ReadFromJsonAsync<CustomResponseDto>();
+            ErrorContent = Error.ErrorMessage;
+            IsSuccess = false;
+
+        }
+        StateHasChanged();
+    }
+
+    private async Task UpdatePassword()
+    {
+
+        var request = await Http.PutAsJsonAsync<UpdatePasswordDto>("/UpdatePassword", updatePasswordDto);
+        if (request.IsSuccessStatusCode)
+        {
+
+            SuccessContent = "Şifre Değişikliği Başarılı";
+            IsSuccess = true;
+            StateHasChanged();
+            await localStorage.RemoveItemAsync("JWT");
+            await Task.Delay(2000);
+            NavigationManager.NavigateTo("/Login");
+        }
+        else
+        {
+            var Error = await request.Content.ReadFromJsonAsync<CustomResponseDto>();
+            ErrorContent = Error.ErrorMessage;
+            IsSuccess = false;
+
+        }
+        StateHasChanged();
+    }
+
+    private async Task FriendList(Components components)
+    {
+        CurrentComponents = components;
+        var request = await Http.GetAsync("/GetFriends");
+        if (request.IsSuccessStatusCode)
+        {
+            friendList = await request.Content.ReadFromJsonAsync<List<UserDto>>();
+            StateHasChanged();
+        }
+    }
+    private async Task RemoveFriendList(Guid RemoveId)
+    {
+        var request = await Http.DeleteAsync($"/RemoveFriendRequestOrFriend/{RemoveId}");
+        if (request.IsSuccessStatusCode)
+        {
+            await FriendList(Components.FriendList);
+        }
+    }
+    private void SendMessage(Guid Id)
+    {
+        NavigationManager.NavigateTo($"/Message/{Id}");
+    }
+
+
+    private void ModalShow(bool state)
+    {
+        modal.ModalShow = state;
+    }
+
+
+    const long maxFileSize = 1024 * 1024 * 5; // 5 MB
+    string imageUrl;
+    IBrowserFile PreviewImage;
+    private async Task PreviewProfileImage(InputFileChangeEventArgs e)
+    {
+
+        PreviewImage = e.File;
+        //dosya okuma işlemi
+        var readStream = PreviewImage.OpenReadStream(maxFileSize);
+
+        var deneme = readStream.Length;
+        var buffer = new byte[readStream.Length];
+
+        //dosya okumada elde ettiğim veriyi aktarıyorum memorystreame
+        var Ms = new MemoryStream(buffer);
+        await readStream.CopyToAsync(Ms);
+        var bytes = Ms.ToArray();
+
+        imageUrl = $"data:{PreviewImage.ContentType};base64,{Convert.ToBase64String(bytes)}";
+        ModalShow(true);
+        StateHasChanged();
+    }
+
+
+
+    bool ImageLoading { get; set; } = false;
+    bool Error { get; set; } = false;
+    async Task UploadImage()
+    {
+        if (PreviewImage != null)
+        {
+            ImageLoading = true;
+            StateHasChanged();
+            var formData = new MultipartFormDataContent();
+            var FileContent = new StreamContent(PreviewImage.OpenReadStream(maxFileSize));
+
+            FileContent.Headers.ContentType = new MediaTypeHeaderValue(PreviewImage.ContentType);
+
+
+            formData.Add(FileContent, "Image", PreviewImage.Name);
+            var request = await Http.PostAsync("/UploadProfileImage", formData);
+
+            if (request.IsSuccessStatusCode)
+            {
+                ImageLoading = false;
+                IsSuccess = true;
+                SuccessContent = "Profil resmi değiştirildi.";
+                StateHasChanged();
+                await Task.Delay(2000);
+                modal.ModalShow = false;
+                SuccessContent = string.Empty;
+                await GetProfile();
+            }
+            else
+            {
+                ImageLoading = false;
+                var response = await request.Content.ReadFromJsonAsync<CustomResponseDto>();
+                ErrorContent.AddRange(response.ErrorMessage);
+                StateHasChanged();
+
+            }
+
+        }
+    }
+
+
+
+    private async Task LogOut()
+    {
+        await localStorage.RemoveItemAsync("JWT");
+        NavigationManager.NavigateTo("/Login");
+    }
+}

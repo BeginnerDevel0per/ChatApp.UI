@@ -1,0 +1,22 @@
+{
+  "name": "ChatApp",
+  "short_name": "ChatApp",
+  "id": "./",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#03173d",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons8-chat-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    },
+    {
+      "src": "icons8-chat-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ]
+}

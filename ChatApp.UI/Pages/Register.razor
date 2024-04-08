@@ -1,0 +1,121 @@
+﻿@page "/Register"
+@using ChatApp.UI.Shared.DTOs.UserDTOs
+
+
+
+<div class=" page m-0 p-0 min-vh-100 d-flex justify-content-center align-items-center   " style="background-color:#1c1d1f;">
+    <div class="row w-100 d-flex justify-content-center ">
+        <div class="col-sm-12 col-md-12 d-flex align-items-center justify-content-center">
+        </div>
+
+        <div class="RegisterForm  p-3 col-11 col-md-4 ">
+            <div class="row d-flex justify-content-center">
+               
+
+                <div class="col-12 col-md-12 ">
+
+                    <h1 class="text-center text-white">Kayıt Ol</h1>
+
+                    <EditForm class="pt-3 p-lg-3" Model="@userRegister" OnValidSubmit="@register" formname="registerform">
+                        <DataAnnotationsValidator />
+                        <div class="mb-3">
+                            <label for="exampleInputEmail1" class="form-label">Kullanıcı Adı</label>
+                            <InputText autocomplete="off" type="text" @bind-Value="userRegister.UserName" class="form-control form-control-lg bg-dark text-white border-0" id="exampleInputEmail1" placeholder="Kullanıcı Adı" aria-describedby="emailHelp">
+                            </InputText>
+
+                        </div>
+                        <div class="mb-3">
+                            <label for="exampleInputEmail1" class="form-label">E-Posta</label>
+                            <InputText autocomplete="off" type="email" @bind-Value="userRegister.Email" class="form-control form-control-lg bg-dark text-white border-0" id="exampleInputEmail1" placeholder="E-Posta Adresi" aria-describedby="emailHelp">
+                            </InputText>
+
+                        </div>
+                        <div class="mb-3">
+                            <label for="exampleInputEmail1" class="form-label">Şifre</label>
+                            <InputText autocomplete="off" type="password" @bind-Value="userRegister.Password" class="form-control form-control-lg text-white bg-dark border-0" id="exampleInputEmail1" placeholder="Şifre" aria-describedby="emailHelp">
+                            </InputText>
+
+                        </div>
+                        <div class="mb-3">
+                            <label for="exampleInputEmail1" class="form-label">Şifre Tekrar</label>
+                            <InputText autocomplete="off" type="password" @bind-Value="userRegister.PasswordAgain" class="form-control form-control-lg text-white bg-dark border-0" placeholder="Şifre Tekrar" id="exampleInputEmail1" aria-describedby="emailHelp">
+                            </InputText>
+                        </div>
+                        <div class="mb-3 d-flex justify-content-end">
+                            <button type="submit" style="background-color:#ff8c00;" class="btn btn-primary btn-lg border-0">Kayıt Ol</button>
+                        </div>
+                    </EditForm>
+                    <span class="text-white">Bir hesabın var mı? <a class="CustomOrangeaTag" href="/Login">Buradan giriş yapabilirsin.</a> </span>
+                </div>
+                <div class="col-12 text-center">
+                    @if (Loading)
+                    {
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border " style="color:#ff8c00;" role="status">
+                                <span class="visually-hidden">Giriş Yapılıyor...</span>
+                            </div>
+                        </div>
+                        <span class="text-center" style="color:lightgray;">Lütfen Bekleyin...</span>
+                    }
+                    @if (Success)
+                    {
+                        <span class="text-center text-success">Kayıt başarılı.Giriş Sayfasına Yönlendiriliyor.</span>
+                    }
+                    @if (Error)
+                    {
+                        <span class="text-center text-danger">@ErrorContent</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+    public UserRegister userRegister { get; set; } = new();
+    public bool Loading { get; set; } = false;
+    public bool Error { get; set; } = false;
+    public bool Success { get; set; } = false;
+    public string ErrorContent { get; set; }
+
+
+    private async Task register()
+    {
+        Loading = true;
+        Error = false;
+        if (userRegister != null)
+        {
+            if (userRegister.Password == userRegister.PasswordAgain)
+            {
+                var request = await Http.PostAsJsonAsync("api/register", userRegister);
+                if (request.IsSuccessStatusCode)
+                {
+                    //kayıt başarılı anasayfaya dön
+                    Loading = false;
+                    Success = true;
+                    StateHasChanged();
+                    await Task.Delay(3000);
+                    NavigationManager.NavigateTo("/Login");
+                }
+                else
+                {
+                    var response = request.Content.ReadFromJsonAsync<CustomResponseDto>();
+                    Loading = false;
+                    Error = true;
+                    ErrorContent = response.Result.ErrorMessage.FirstOrDefault();
+                    StateHasChanged();
+                    //hatayı yaz
+                }
+            }
+            else
+            {
+                Loading = false;
+                ErrorContent = "Şifreler uyuşmuyor.";
+                Error = true;
+                StateHasChanged();
+            }
+        }
+    }
+}

@@ -1,0 +1,38 @@
+﻿@if (ModalShow)
+{
+
+
+    <!-- Modal-Start -->
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="z-index:150;">
+        <div class="modal-backdrop fade show " style="filter:brightness(150%) !important; " @onclick="()=>State(false)"> </div>
+        <div class="modal-dialog " style="z-index: 1050; margin-top:150px;  ">
+            <div class="modal-content p-1" style="background-color: rgb(28,29,31,0.5);  backdrop-filter:blur(25px); ">
+                <div class="row d-flex justify-content-end">
+                    <div class="col-auto">
+                        <button type="button" @onclick="()=>State(false)" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+                <div class="modal-body text-white  ">
+                    @ChildContent
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    <!-- Modal-End -->
+}
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public bool ModalShow { get; set; } = false;
+
+    public void State(bool State)
+    {
+        ModalShow = State;
+        StateHasChanged();
+    }
+
+}

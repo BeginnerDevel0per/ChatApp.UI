@@ -1,0 +1,120 @@
+﻿@page "/Login"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Headers
+
+<div class="page min-vh-100 d-flex justify-content-center align-items-center p-0 m-0" style="background-color:#1c1d1f;">
+    <div class=" row  w-100 d-flex  justify-content-center  pb-5 mb-5">
+        <div class="login-section  pb-5 pt-5 col-11 col-md-@ColSize">
+            <div class="d-flex justify-content-center mb-5">
+                <img class="d-flex " src="../icons8-chat-100.png" />
+            </div>
+
+            <h2 class="text-center text-white">Hesabına Giriş Yap</h2>
+            <EditForm id="loginmodel" Model="@loginModel" OnValidSubmit="@UserLogin" FormName="LoginForm">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label for="UserNameInput" class="form-label  " style="color:lightgray;">Kullanıcı Adı</label>
+                    <InputText autocomplete="off" type="text" @bind-Value="loginModel.UserName" class="form-control form-control-lg bg-dark text-white border-0" placeholder="Kullanıcı Adı" id="UserNameInput"></InputText>
+
+                </div>
+                <div class="mb-3">
+                    <label for="PasswordInput" class="form-label " style="color:lightgray;">Şifre</label>
+                    <InputText type="password" @bind-Value="loginModel.Password" placeholder="Şifre" class="form-control form-control-lg bg-dark text-white border-0" id="PasswordInput"></InputText>
+
+                </div>
+                <div class="form-check">
+                    <label class="form-check-label " style="color:lightgray;" for="flexCheckDefault">
+                        Hesabımı Hatırla
+                    </label>
+                    <InputCheckbox @bind-Value="loginModel.RememberMyAccount" class="form-check-input bg-dark" type="checkbox" id="flexCheckDefault"> </InputCheckbox>
+                </div>
+                <div class="mb-3 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary border-0 btn-lg" style="background-color:#ff8c00;">Giriş Yap</button>
+                </div>
+                <hr class="bg-white" />
+                <span style="color:lightgray;">Bir hesabın yok mu? <a class="CustomOrangeaTag" href="/Register">Buradan kayıt olabilirsin.</a> </span>
+            </EditForm>
+        </div>
+        <div class="col-12 text-center">
+            @if (Loading)
+            {
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border " style="color:#ff8c00;" role="status">
+                        <span class="visually-hidden">Giriş Yapılıyor...</span>
+                    </div>
+                </div>
+                <span class="text-center" style="color:lightgray;">Giriş Yapılıyor...</span>
+            }
+            @if (Error)
+            {
+                <span class="text-center text-danger">Kullanıcı adı veya şifre hatalı</span>
+            }
+        </div>
+    </div>
+
+
+</div>
+@code {
+    [Parameter]
+    public int ColSize { get; set; } = 4;
+    public LoginModel loginModel { get; set; }
+    public string? RememberedUserName { get; set; }
+    public bool Loading { get; set; } = false;
+    public bool Error { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        loginModel = new LoginModel();
+        var UserName = await localStorage.GetItemAsync<string>("RememberedUserName");
+        if (UserName != null)
+        {
+            loginModel.UserName = UserName;
+            loginModel.RememberMyAccount = true;
+        }
+        StateHasChanged();
+    }
+    private async void UserLogin()
+    {
+        Http.DefaultRequestHeaders.Clear();
+        Error = false;
+        Loading = true;
+        var Request = await Http.GetAsync($"api/Login?UserName={loginModel.UserName}&Password={loginModel.Password}");
+        if (Request.IsSuccessStatusCode)
+        {
+
+            var Token = await Request.Content.ReadFromJsonAsync<Token>();
+            Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token.AccessToken);
+            await localStorage.SetItemAsync("JWT", Token.AccessToken);
+            if (loginModel.RememberMyAccount)
+            {
+                await localStorage.SetItemAsync("RememberedUserName", loginModel.UserName);
+            }
+            else
+            {
+                await localStorage.RemoveItemAsync("RememberedUserName");
+            }
+            NavigationManager.NavigateTo("/Home");
+            Loading = false;
+        }
+        else
+        {
+            Loading = false;
+            Error = true;
+        }
+
+        StateHasChanged();
+    }
+    public class LoginModel
+    {
+        [Required]
+        public string UserName { get; set; }
+
+        [Required]
+        public string Password { get; set; }
+
+        public bool RememberMyAccount { get; set; } = false;
+    }
+
+}

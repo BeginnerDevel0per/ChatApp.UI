@@ -1,0 +1,169 @@
+﻿@using ChatApp.UI.Shared.DTOs
+@using Microsoft.AspNetCore.SignalR.Client
+@if (Loading)
+{
+    <div class="vh-100 d-flex justify-content-center align-items-center">
+        <div class="row mb-5 pb-5">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+    </div>
+
+}
+else
+{
+
+
+    <div class="row me-3 ms-3">
+        <h5 class="Nav-Title text-white">Senin Sohbetlerin</h5>
+        <div class="mb-3">
+            <input type="email" @bind="Search" autocomplete="off" @bind:event="oninput" @onkeydown="ListUsers" @bind:after="ListUsers" class="form-control bg-dark text-white border-0" id="exampleFormControlInput1" placeholder="Sohbet Ara">
+        </div>
+    </div>
+
+
+    @if (LastMessagesService.LastMessages != null && ListSearchlastMessages.Count == 0)
+    {
+        @foreach (var item in LastMessagesService.LastMessages.OrderByDescending(x => x.Message.CreatedDate))
+        {
+            <a class="text-decoration-none" href="/message/@item.User.Id">
+                <div class="card border-0 ">
+                    <div class="row  align-items-center g-0">
+                        <div class="col-3 d-flex justify-content-end">
+                            @if (item.User.ProfileImage != null)
+                            {
+                                string ProfileImage = $"https://localhost:7255/UserProfileImage/{item.User.ProfileImage}";
+
+                                <img alt="Icon" width="70" height="70" class="rounded-circle" src="@ProfileImage" style="object-fit:cover;">
+                            }
+                            else
+                            {
+                                <img alt="Icon" width="70" height="70" class="rounded-circle" src="/UserIcon.png" style="object-fit:cover;">
+                            }
+                        </div>
+                        <div class="col-9">
+                            <div class="card-body  text-start text-truncate">
+                                <h6 class="card-title">@item.User.UserName</h6>
+                                <span style="font-size:x-small;  " class="text-muted">@item.Message.Content</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+
+    }
+    else
+    {
+        @foreach (var item in ListSearchlastMessages.OrderByDescending(x => x.Message.CreatedDate))
+        {
+            <a class="text-decoration-none" href="/message/@item.User.Id">
+                <div class="card border-0 ">
+                    <div class="row  align-items-center g-0">
+                        <div class="col-3 d-flex justify-content-end">
+                            @if (item.User.ProfileImage != null)
+                            {
+                                string ProfileImage = $"https://localhost:7255/UserProfileImage/{item.User.ProfileImage}";
+
+                                <img alt="Icon" width="70" height="70" class="rounded-circle" src="@ProfileImage" style="object-fit:cover;">
+                            }
+                            else
+                            {
+                                <img alt="Icon" width="70" height="70" class="rounded-circle" src="/UserIcon.png" style="object-fit:cover;">
+                            }
+                        </div>
+                        <div class="col-9">
+                            <div class="card-body  text-start text-truncate">
+                                <h6 class="card-title">@item.User.UserName</h6>
+                                <span style="font-size:x-small;  " class="text-muted">@item.Message.Content</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        }
+    }
+}
+
+
+@code {
+    public string? Search { get; set; }
+    [Parameter]
+    public List<LastMessageDto>? ListSearchlastMessages { get; set; } = new();
+
+    public string userName { get; set; }
+
+    public bool Loading { get; set; } = true;
+    protected override async Task OnInitializedAsync()
+    {
+        if (await ChatService.ConnectionState())
+        {
+
+            Notification();
+            await GetLastMessages();
+            Loading = false;
+        }
+
+    }
+    private void ListUsers()
+    {
+        if (Search?.Length > 2)
+        {
+            ListSearchlastMessages?.Clear();
+            ListSearchlastMessages = LastMessagesService?.LastMessages?.Where(x => x.User.UserName.Contains(Search)).ToList();
+            StateHasChanged();
+        }
+
+    }
+    public void getMessagePage(Guid ReceiverId)
+    {
+        NavigationManager.NavigateTo($"/Message/{ReceiverId}");
+    }
+    public void Notification()
+    {
+        ChatService.HubConnection.On<LastMessageDto>("AddLastMessage", async (lastMessageDtoSender) =>
+        {
+            var IsLastMessages = LastMessagesService.LastMessages?.FirstOrDefault(x => x.User.Id == lastMessageDtoSender.User.Id);
+            if (IsLastMessages != null)
+            {
+                LastMessagesService.DeleteLastMessages(IsLastMessages);
+                LastMessagesService.AddLastMessages(lastMessageDtoSender);
+            }
+            else
+            {
+                LastMessagesService.AddLastMessages(lastMessageDtoSender);
+            }
+            await InvokeAsync(StateHasChanged);
+        });
+
+        ChatService.HubConnection.On<LastMessageDto>("NotificationMessages", async (LastMessageDto) =>
+                 {
+                     var IsLastMessages = LastMessagesService.LastMessages?.FirstOrDefault(x => x.User.Id == LastMessageDto.User.Id);
+                     if (IsLastMessages != null)
+                     {
+                         LastMessagesService.DeleteLastMessages(IsLastMessages);
+                         LastMessagesService.AddLastMessages(LastMessageDto);
+                     }
+                     else
+                     {
+                         LastMessagesService.AddLastMessages(LastMessageDto);
+                     }
+                     await JSruntime.InvokeVoidAsync("showNotification", $"{LastMessageDto.User.UserName}: {LastMessageDto.Message.Content}");
+                     await InvokeAsync(StateHasChanged);
+                 });
+    }
+    public async Task GetLastMessages()
+    {
+        var request = await Http.GetAsync("/LastMessages");
+        if (request.IsSuccessStatusCode)
+        {
+            LastMessagesService.ClearLastMessages();
+            var messageDtos = await request.Content.ReadFromJsonAsync<List<LastMessageDto>>();
+            LastMessagesService.AddRangeLastMessages(messageDtos);
+        }
+        StateHasChanged();
+    }
+
+}

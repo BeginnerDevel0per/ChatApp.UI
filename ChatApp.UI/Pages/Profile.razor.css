@@ -1,0 +1,8 @@
+﻿.Profile-Image-Preview {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width:250px;
+    height:250px;
+    border-radius:50%;
+}
