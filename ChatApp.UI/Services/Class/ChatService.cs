@@ -18,6 +18,7 @@ namespace ChatApp.UI.Services.Class
 
         public async Task InitializeHubConnectionAsync(string accessToken)
         {
+         
             HubConnection = new HubConnectionBuilder()
              .WithUrl("https://localhost:7255/Chathub", options =>
              {

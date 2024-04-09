@@ -24,7 +24,7 @@
                 <div class="col-3 d-flex justify-content-end">
                     @if (item.ProfileImage != null)
                     {
-                        string ProfileImage = $"https://localhost:7255/UserProfileImage/{item.ProfileImage}";
+                        string ProfileImage = $"{Http.BaseAddress}UserProfileImage/{item.ProfileImage}";
 
                         <img alt="Icon" width="70" height="70" class="rounded-circle" src="@ProfileImage" style="object-fit:cover;">
                     }
@@ -65,7 +65,7 @@ else
         Loading = false;
     }
 
-
+    
     private async void AcceptFriendRequest(Guid AcceptId)
     {
         var request = await Http.GetAsync($"/AcceptFriendRequest/{AcceptId}");

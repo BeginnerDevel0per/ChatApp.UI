@@ -20,7 +20,7 @@
                 <div class="col-auto  p-1 d-flex justify-content-start   ">
                     @if (ReceiverUserDto.ProfileImage != null)
                     {
-                        string ProfileImage = $"https://localhost:7255/UserProfileImage/{ReceiverUserDto.ProfileImage}";
+                        string ProfileImage = $"{Http.BaseAddress}UserProfileImage/{ReceiverUserDto.ProfileImage}";
 
                         <img alt="Icon" width="70" height="70" class="rounded-circle" src="@ProfileImage" style="object-fit:cover;">
                     }
